@@ -73,6 +73,7 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate {
         calculate(to: markerCoordinate, setCamera: camera, successCallback: successCallback)
         if camera.boolValue {
             marker.coordinate = markerCoordinate
+            mapView.addAnnotation(marker)
         }
     }
     
@@ -107,7 +108,7 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate {
         mapView.setUserTrackingMode(.none, animated: true, completionHandler: nil)
         guard route.coordinateCount > 0 else { return }
         var routeCoordinates = route.coordinates!
-        let polyline = MGLPolygonFeature(coordinates: &routeCoordinates, count: route.coordinateCount)
+        let polyline = MGLPolylineFeature(coordinates: &routeCoordinates, count: route.coordinateCount)
         
         if let source = mapView.style?.source(withIdentifier: "route-source") as? MGLShapeSource {
             source.shape = polyline
