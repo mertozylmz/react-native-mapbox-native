@@ -21,7 +21,6 @@ Pod::Spec.new do |s|
 
   s.dependency "React"
   s.dependency 'Mapbox-iOS-SDK', '~> 5.4'
-  s.dependency 'MapboxNavigation', '~> 0.37.0'
-  # s.dependency "..."
+  s.dependency 'MapboxNavigation', '~> 0.38.0'
 end
 
