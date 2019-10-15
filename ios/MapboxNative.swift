@@ -158,6 +158,7 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate {
         Directions.shared.calculate(options) { (waypoints, routes, error) in
             guard let route = routes?.first else { return }
             let viewController = NavigationViewController(for: route)
+            viewController.modalPresentationStyle = .fullScreen
             self.rootViewController!.present(viewController, animated: true, completion: nil)
         }
     }
