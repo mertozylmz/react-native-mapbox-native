@@ -2,9 +2,9 @@ import { requireNativeComponent, NativeModules, Platform } from 'react-native';
 
 const MapboxNative = requireNativeComponent('MapboxNative', null);
 
-export const AddPoint = (coord) => {
+export const AddPoint = (coord, isCamera = true) => {
     if (Platform.OS == 'ios') {
-        NativeModules.MapboxNative.addPoint(coord, true, () => {});
+        NativeModules.MapboxNative.addPoint(coord, isCamera, () => {});
     }
 }
 
