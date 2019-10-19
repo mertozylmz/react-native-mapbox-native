@@ -130,10 +130,10 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate {
     // Clear
     @objc func clearMapItems() {
         mapView.removeAnnotation(marker)
-        let lineStyle = mapView.style?.layer(withIdentifier: "route-style")
-        let source = mapView.style?.source(withIdentifier: "route-source")
-        mapView.style?.removeLayer(lineStyle!)
-        mapView.style?.removeSource(source!)
+        let lineStyle = mapView.style!.layer(withIdentifier: "route-style")
+        let source = mapView.style!.source(withIdentifier: "route-source")
+        mapView.style!.removeLayer(lineStyle!)
+        mapView.style!.removeSource(source!)
     }
     
     // Turn By Turn - Navigation Coordinates Set
