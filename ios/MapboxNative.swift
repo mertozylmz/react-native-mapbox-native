@@ -126,6 +126,33 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate {
         }
         mapView.userTrackingMode = .followWithHeading
     }
+
+    // Drawp Polygon
+    @objc func drawPolygon(_ coordinateList: NSArray) {
+        var coords = [CLLocationCoordinate2D]()
+        for i in 0...coordinateList.count - 1 {
+            let coord: [NSObject] = coordinateList[i] as! [NSObject]
+            if coord.count > 1 {
+               coords.append(CLLocationCoordinate2D(
+                    latitude: CLLocationDegrees(truncating: coord[1] as! NSNumber),
+                    longitude: CLLocationDegrees(truncating: coord[0] as! NSNumber)
+               ))
+            }
+        }
+        let shape = MGLPolygon(coordinates: &coords, count: UInt(coords.count))
+        mapView.addAnnotation(shape)
+    }
+    
+    func mapView(_ mapView: MGLMapView, alphaForShapeAnnotation annotation: MGLShape) -> CGFloat {
+        return 0.15
+    }
+    func mapView(_ mapView: MGLMapView, strokeColorForShapeAnnotation annotation: MGLShape) -> UIColor {
+        return .white
+    }
+    
+    func mapView(_ mapView: MGLMapView, fillColorForPolygonAnnotation annotation: MGLPolygon) -> UIColor {
+        return UIColor(red: 59/255, green: 178/255, blue: 208/255, alpha: 1)
+    }
     
     // Clear
     @objc func clearMapItems() {
