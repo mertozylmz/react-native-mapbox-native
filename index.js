@@ -32,4 +32,10 @@ export const ClearMap = () => {
     }
 }
 
+export const DrawPolygon = (coords) => {
+    if (Platform.OS == 'ios') {
+        NativeModules.MapboxNative.drawPolygon(coords);
+    }
+}
+
 export default MapboxNative;
