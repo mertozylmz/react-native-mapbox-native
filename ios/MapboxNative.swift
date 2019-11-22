@@ -184,9 +184,11 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate {
     // Turn By Turn - Navigation Start
     @objc func startNavigation() {
         let options = NavigationRouteOptions(waypoints: coordinates as! [Waypoint], profileIdentifier: MBDirectionsProfileIdentifier.automobile)
+        options.roadClassesToAvoid = .toll
         Directions.shared.calculate(options) { (waypoints, routes, error) in
             guard let route = routes?.first else { return }
             let viewController = NavigationViewController(for: route)
+            viewController.showsReportFeedback = false
             viewController.modalPresentationStyle = .fullScreen
             self.rootViewController!.present(viewController, animated: true, completion: nil)
         }
