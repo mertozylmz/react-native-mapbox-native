@@ -143,15 +143,12 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate {
         mapView.addAnnotation(shape)
     }
     
-    func mapView(_ mapView: MGLMapView, alphaForShapeAnnotation annotation: MGLShape) -> CGFloat {
-        return 0.15
-    }
     func mapView(_ mapView: MGLMapView, strokeColorForShapeAnnotation annotation: MGLShape) -> UIColor {
-        return .white
+        return UIColor(red: 1/255, green: 122/255, blue: 255/255, alpha: 1)
     }
     
     func mapView(_ mapView: MGLMapView, fillColorForPolygonAnnotation annotation: MGLPolygon) -> UIColor {
-        return UIColor(red: 59/255, green: 178/255, blue: 208/255, alpha: 1)
+        return UIColor(red: 1/255, green: 122/255, blue: 255/255, alpha: 0.40)
     }
     
     // Clear
