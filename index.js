@@ -38,4 +38,16 @@ export const DrawPolygon = (coords) => {
     }
 }
 
+export const RegionChangedEvent = () => {
+    if (Platform.OS == 'ios') {
+        NativeModules.MapboxNative.regionChangedEvent();
+    }
+}
+
+export const ResetRegion = () => {
+    if (Platform.OS == 'ios') {
+        NativeModules.MapboxNative.resetRegion();
+    }
+}
+
 export default MapboxNative;
