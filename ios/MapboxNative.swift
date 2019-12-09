@@ -64,6 +64,25 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate {
         return annotationImage
     }
     
+    func mapView(_ mapView: MGLMapView, regionDidChangeAnimated animated: Bool) {
+        if (mapView.userTrackingMode != .followWithHeading) {
+            setEventValue(value: true)
+        }
+    }
+    
+    @objc func resetRegion() {
+        mapView.userTrackingMode = .followWithHeading
+        setEventValue(value: false)
+    }
+    
+    @objc func regionChangedEvent() {
+        setEventValue(value: false)
+    }
+    
+    func setEventValue(value: Bool) {
+        self.bridge.eventDispatcher()?.sendDeviceEvent(withName: "regionChanged", body: value)
+    }
+    
     // Add Point & Draw Route
     @objc func addPoint(_ coordinates: NSArray, setCamera camera: NSNumber, callback successCallback: @escaping RCTResponseSenderBlock) {
         let markerCoordinate = CLLocationCoordinate2D(
