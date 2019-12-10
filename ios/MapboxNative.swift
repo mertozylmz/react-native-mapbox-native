@@ -13,7 +13,7 @@ import MapboxNavigationNative
 import MapboxNavigation
 
 @objc(MapboxNative)
-class MapboxNative: RCTViewManager, MGLMapViewDelegate {
+class MapboxNative: RCTViewManager, MGLMapViewDelegate, NavigationViewControllerDelegate {
     let rootViewController:UIViewController? = UIApplication.shared.delegate?.window??.rootViewController!
     var customUserAnnotation = CustomUserLocationAnnotationView()
     var marker = MGLPointAnnotation()
@@ -71,7 +71,9 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate {
     }
     
     @objc func resetRegion() {
-        mapView.userTrackingMode = .followWithHeading
+        DispatchQueue.main.async {
+            self.mapView.userTrackingMode = .followWithHeading
+        }
         setEventValue(value: false)
     }
     
@@ -146,7 +148,7 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate {
         mapView.userTrackingMode = .followWithHeading
     }
 
-    // Drawp Polygon
+    // Draw Polygon
     @objc func drawPolygon(_ coordinateList: NSArray) {
         var coords = [CLLocationCoordinate2D]()
         for i in 0...coordinateList.count - 1 {
@@ -159,7 +161,9 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate {
             }
         }
         let shape = MGLPolygon(coordinates: &coords, count: UInt(coords.count))
-        mapView.addAnnotation(shape)
+        DispatchQueue.main.async {
+            self.mapView.addAnnotation(shape)
+        }
     }
     
     func mapView(_ mapView: MGLMapView, strokeColorForShapeAnnotation annotation: MGLShape) -> UIColor {
@@ -170,9 +174,16 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate {
         return UIColor(red: 1/255, green: 122/255, blue: 255/255, alpha: 0.40)
     }
     
+    func navigationViewController(_ navigationViewController: NavigationViewController, didArriveAt waypoint: Waypoint) -> Bool {
+        self.rootViewController!.dismiss(animated: true, completion: nil)
+        return false
+    }
+    
     // Clear
     @objc func clearMapItems() {
-        mapView.removeAnnotation(marker)
+        DispatchQueue.main.async {
+            self.mapView.removeAnnotation(self.marker)
+        }
         if let source = mapView.style?.source(withIdentifier: "route-source") as? MGLShapeSource {
             mapView.style?.removeSource(source)
         }
@@ -204,9 +215,8 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate {
         Directions.shared.calculate(options) { (waypoints, routes, error) in
             guard let route = routes?.first else { return }
             let viewController = NavigationViewController(for: route)
-            viewController.showEndOfRouteFeedback(duration: 1.0, completionHandler: { (true) in
-                self.rootViewController!.dismiss(animated: true, completion: nil)
-            })
+            
+            viewController.showsEndOfRouteFeedback = false
             viewController.showsReportFeedback = false
             viewController.modalPresentationStyle = .fullScreen
             self.rootViewController!.present(viewController, animated: true, completion: nil)
