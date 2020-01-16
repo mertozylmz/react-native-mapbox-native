@@ -12,11 +12,19 @@ import MapboxDirections
 import MapboxNavigationNative
 import MapboxNavigation
 
+class MyCustomPointAnnotation: MGLPointAnnotation {
+    var isHotspot: Bool = false
+}
+
+class MyCustomPolygon: MGLPolygon {
+    var isHotspot: Bool = false
+}
+
 @objc(MapboxNative)
 class MapboxNative: RCTViewManager, MGLMapViewDelegate, NavigationViewControllerDelegate {
     let rootViewController:UIViewController? = UIApplication.shared.delegate?.window??.rootViewController!
     var customUserAnnotation = CustomUserLocationAnnotationView()
-    var marker = MGLPointAnnotation()
+    var marker = MyCustomPointAnnotation()
     var coordinates = [NSObject]()
     var mapView = MGLMapView()
     
@@ -37,12 +45,22 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate, NavigationViewController
     
     // Tap the user location annotation to toggle heading tracking mode.
     func mapView(_ mapView: MGLMapView, didDeselect annotation: MGLAnnotation) {
-        if (mapView.userTrackingMode != .followWithHeading) {
-            mapView.userTrackingMode = .followWithHeading
-        } else {
-            mapView.resetNorth()
+        if (annotation is MGLUserLocation) {
+            if (mapView.userTrackingMode != .followWithHeading) {
+                mapView.userTrackingMode = .followWithHeading
+            } else {
+                mapView.resetNorth()
+            }
+            mapView.deselectAnnotation(annotation, animated: false)
+        } else if let pointAnnotation = annotation as? MyCustomPointAnnotation {
+            if (pointAnnotation.isHotspot) {
+                hotspotEvent(value: [pointAnnotation.coordinate.longitude, pointAnnotation.coordinate.latitude])
+            }
+        } else if let polygonAnnotation = annotation as? MyCustomPolygon {
+            if (polygonAnnotation.isHotspot) {
+                hotspotEvent(value: [polygonAnnotation.coordinate.longitude, polygonAnnotation.coordinate.latitude])
+            }
         }
-        mapView.deselectAnnotation(annotation, animated: false)
     }
     
     // Create Custom User Annotation
@@ -55,11 +73,21 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate, NavigationViewController
     
     // Adding Point Set Image
     func mapView(_ mapView: MGLMapView, imageFor annotation: MGLAnnotation) -> MGLAnnotationImage? {
-        var annotationImage = mapView.dequeueReusableAnnotationImage(withIdentifier: "marker")
+        if let castAnnotation = annotation as? MyCustomPointAnnotation {
+            if (castAnnotation.isHotspot) {
+                var annotationImage = mapView.dequeueReusableAnnotationImage(withIdentifier: "hotspot")
+                if annotationImage == nil {
+                    let image = UIImage(named: "Hotspot")!
+                    annotationImage = MGLAnnotationImage(image: image, reuseIdentifier: "hotspot")
+                }
+                return annotationImage
+            }
+        }
+        
+        var annotationImage = mapView.dequeueReusableAnnotationImage(withIdentifier: "pin")
         if annotationImage == nil {
-            var image = UIImage(named: "Marker")!
-            image = image.withAlignmentRectInsets(UIEdgeInsets(top: 0, left: 0, bottom: image.size.height / 2, right: 0))
-            annotationImage = MGLAnnotationImage(image: image, reuseIdentifier: "marker")
+            let image = UIImage(named: "Marker")!
+            annotationImage = MGLAnnotationImage(image: image, reuseIdentifier: "pin")
         }
         return annotationImage
     }
@@ -79,10 +107,6 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate, NavigationViewController
     
     @objc func regionChangedEvent() {
         setEventValue(value: false)
-    }
-    
-    func setEventValue(value: Bool) {
-        self.bridge.eventDispatcher()?.sendDeviceEvent(withName: "regionChanged", body: value)
     }
     
     // Add Point & Draw Route
@@ -147,9 +171,21 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate, NavigationViewController
         }
         mapView.userTrackingMode = .followWithHeading
     }
+    
+    // Add Polygon Center Point
+    @objc func polygonCenterPoint(_ coordinates: NSArray) {
+        let polygonMarker = MyCustomPointAnnotation()
+        polygonMarker.isHotspot = true
+        let markerCoordinate = CLLocationCoordinate2D(
+            latitude: CLLocationDegrees(truncating: coordinates[1] as! NSNumber),
+            longitude: CLLocationDegrees(truncating: coordinates[0] as! NSNumber)
+        )
+        polygonMarker.coordinate = markerCoordinate
+        mapView.addAnnotation(polygonMarker)
+    }
 
     // Draw Polygon
-    @objc func drawPolygon(_ coordinateList: NSArray) {
+    @objc func drawPolygon(_ coordinateList: NSArray, isHotspot: NSNumber = 0) {
         var coords = [CLLocationCoordinate2D]()
         for i in 0...coordinateList.count - 1 {
             let coord: [NSObject] = coordinateList[i] as! [NSObject]
@@ -160,7 +196,8 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate, NavigationViewController
                ))
             }
         }
-        let shape = MGLPolygon(coordinates: &coords, count: UInt(coords.count))
+        let shape = MyCustomPolygon(coordinates: &coords, count: UInt(coords.count))
+        shape.isHotspot = isHotspot.boolValue
         DispatchQueue.main.async {
             self.mapView.addAnnotation(shape)
         }
@@ -171,7 +208,13 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate, NavigationViewController
     }
     
     func mapView(_ mapView: MGLMapView, fillColorForPolygonAnnotation annotation: MGLPolygon) -> UIColor {
-        return UIColor(red: 1/255, green: 122/255, blue: 255/255, alpha: 0.40)
+        if let polygonAnnotation = annotation as? MyCustomPolygon {
+            if (polygonAnnotation.isHotspot) {
+                    return UIColor(red: 1/255, green: 122/255, blue: 255/255, alpha: 0.20)
+            }
+            return UIColor(red: 1/255, green: 122/255, blue: 255/255, alpha: 0.10)
+        }
+        return UIColor(red: 1/255, green: 122/255, blue: 255/255, alpha: 0.10)
     }
     
     func navigationViewController(_ navigationViewController: NavigationViewController, didArriveAt waypoint: Waypoint) -> Bool {
@@ -226,6 +269,14 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate, NavigationViewController
     // Turn By Turn - Navigation Stop
     @objc func stopNavigation() {
         self.rootViewController!.dismiss(animated: true, completion: nil)
+    }
+    
+    func setEventValue(value: Bool) {
+        self.bridge.eventDispatcher()?.sendDeviceEvent(withName: "regionChanged", body: value)
+    }
+    
+    func hotspotEvent(value: NSArray) {
+        self.bridge.eventDispatcher()?.sendDeviceEvent(withName: "clickedHotspotZone", body: value)
     }
     
     override static func requiresMainQueueSetup() -> Bool {

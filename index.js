@@ -32,9 +32,15 @@ export const ClearMap = () => {
     }
 }
 
-export const DrawPolygon = (coords) => {
+export const DrawPolygon = (coords, isHotspot = false) => {
     if (Platform.OS == 'ios') {
-        NativeModules.MapboxNative.drawPolygon(coords);
+        NativeModules.MapboxNative.drawPolygon(coords, isHotspot);
+    }
+}
+
+export const PolygonCenterPoint = (coord) => {
+    if (Platform.OS == 'ios') {
+        NativeModules.MapboxNative.polygonCenterPoint(coord);
     }
 }
 
