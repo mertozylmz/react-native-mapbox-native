@@ -38,7 +38,7 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate, NavigationViewController
         mapView.logoView.isHidden = true
         mapView.compassView.isHidden = true
         mapView.isPitchEnabled = false
-        mapView.styleURL = MGLStyle.lightStyleURL
+        mapView.styleURL = "mapbox://styles/berymo123/ck6480f400imz1ilgje49nutq"
         
         return mapView
     }
