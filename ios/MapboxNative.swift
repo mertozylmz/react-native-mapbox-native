@@ -268,7 +268,9 @@ class MapboxNative: RCTViewManager, MGLMapViewDelegate, NavigationViewController
     
     // Turn By Turn - Navigation Stop
     @objc func stopNavigation() {
-        self.rootViewController!.dismiss(animated: true, completion: nil)
+        DispatchQueue.main.async {
+            self.rootViewController!.dismiss(animated: true, completion: nil)
+        }
     }
     
     func setEventValue(value: Bool) {
