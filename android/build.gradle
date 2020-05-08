@@ -45,6 +45,7 @@ android {
 }
 
 repositories {
+    maven { url 'https://mapbox.bintray.com/mapbox' }
     mavenLocal()
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
@@ -62,6 +63,11 @@ dependencies {
     // ref:
     // https://github.com/facebook/react-native/blob/0.61-stable/template/android/app/build.gradle#L192
     //noinspection GradleDynamicVersion
+    implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:6.7.0'
+    implementation 'com.mapbox.mapboxsdk:mapbox-android-navigation:0.22.0'
+    implementation('com.mapbox.mapboxsdk:mapbox-android-navigation-ui:0.22.0') {
+        transitive = true
+    }
     implementation 'com.facebook.react:react-native:+'  // From node_modules
 }
 
