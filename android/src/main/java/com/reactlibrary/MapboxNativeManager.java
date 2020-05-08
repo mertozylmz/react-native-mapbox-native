@@ -28,6 +28,7 @@ import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
+import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.location.LocationComponent;
@@ -61,7 +62,6 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineJoin;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineWidth;
 
 public class MapboxNativeManager extends SimpleViewManager implements OnMapReadyCallback, LocationEngineListener, OnLocationClickListener {
-
     public static final String REACT_CLASS = "MapboxNative";
     private static final String TAG = "MainActivity";
 
@@ -90,6 +90,7 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
     @Override
     public MapView createViewInstance(ThemedReactContext reactContext) {
         mContext = reactContext;
+        Mapbox.getInstance(mContext, "pk.eyJ1IjoiYmVyeW1vMTIzIiwiYSI6ImNqbjNoZXNraTAwNzQza3J4YnB4MjN5bDAifQ.G3ZaO08XKciKI3WXhnj4xA");
         mapView = new MapView(mContext);
         mapView.findViewById(R.id.mapView);
         mapView.getMapAsync(this);
@@ -99,7 +100,7 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
 
     @Override
     public void onMapReady(MapboxMap mapboxMap) {
-        MapModule.mapboxMap = mapboxMap;
+        MapboxNativeManager.mapboxMap = mapboxMap;
         initializeLocationEngine();
         initializeLocationLayer();
 
@@ -143,7 +144,7 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
 
     private void setCameraPosition(Location location) {
         mapboxMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 13.0), 2000);
-        LocationComponent locationComponent = mapboxMap.getLocationComponent();
+        final LocationComponent locationComponent = mapboxMap.getLocationComponent();
         new android.os.Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -182,7 +183,7 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
 
     // REACT NATIVE ----------------- BRIDGE -----------------
     @ReactMethod
-    public void addPoint(@Nullable ReadableArray coordinates) {
+    public void addPoint(@Nullable final ReadableArray coordinates) {
         mContext.getCurrentActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -223,7 +224,7 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
                 ));
     }
 
-    private void getRoute(Point origin, Point destination) {
+    private void getRoute(final Point origin, final Point destination) {
         mContext.getCurrentActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
