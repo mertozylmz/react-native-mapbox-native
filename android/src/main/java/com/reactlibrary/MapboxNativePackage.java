@@ -1,5 +1,6 @@
 package com.reactlibrary;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -12,6 +13,24 @@ import com.facebook.react.bridge.JavaScriptModule;
 
 public class MapboxNativePackage implements ReactPackage {
     @Override
+    public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
+        return Collections.<ViewManager>singletonList(
+                new MapboxNativeManager()
+        );
+    }
+
+    @Override
+    public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
+        List<NativeModule> modules = new ArrayList<>();
+        modules.add((NativeModule) new MapboxNativeManager());
+
+        return modules;
+    }
+
+    public List<Class<? extends JavaScriptModule>> createJSModules() {
+        return Collections.emptyList();
+    }
+    /*@Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
         return Collections.emptyList();
     }
@@ -19,5 +38,5 @@ public class MapboxNativePackage implements ReactPackage {
     @Override
     public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
         return Arrays.<ViewManager>asList(new MapboxNativeManager());
-    }
+    }*/
 }
