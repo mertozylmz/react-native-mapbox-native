@@ -22,6 +22,7 @@ import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
+import com.mapbox.geojson.Polygon;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
@@ -33,6 +34,7 @@ import com.mapbox.mapboxsdk.location.modes.RenderMode;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
+import com.mapbox.mapboxsdk.style.layers.FillLayer;
 import com.mapbox.mapboxsdk.style.layers.Layer;
 import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.Property;
@@ -50,6 +52,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import static com.mapbox.core.constants.Constants.PRECISION_6;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.fillColor;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.fillOpacity;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineCap;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineColor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineJoin;
@@ -61,10 +65,12 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
 
     private static final String GEOJSON_SOURCE = "geojson-source-lineLayer";
     private static final String DIRECTIONS_LAYER = "directions-layer";
+    private static final String POLYGON_LAYER = "polygon-layer";
 
     private static final String MARKER_SOURCE = "marker-source";
     private static final String MARKER_STYLE_LAYER = "marker-style-layer";
     private static final String MARKER_IMAGE = "custom-marker";
+    private static final String POLYGON_SOURCE = "polygon-source";
 
 
     private static ThemedReactContext mContext;
@@ -75,6 +81,10 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
     private Location originLocation;
     private FeatureCollection featureCollection;
     private FeatureCollection featureCollectionMarker;
+    private FeatureCollection featureCollectionPolygon;
+
+    private static final List<List<Point>> POINTS = new ArrayList<>();
+    private static final List<Point> OUTER_POINTS = new ArrayList<>();
 
     @Override
     public String getName() {
@@ -170,12 +180,40 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
     private void createRouteLayer() {
         featureCollection = FeatureCollection.fromFeatures(new Feature[] {});
         featureCollectionMarker = FeatureCollection.fromFeatures(new Feature[] {});
+        featureCollectionPolygon = FeatureCollection.fromFeatures(new Feature[] {});
 
         mapboxMap.addSource(new GeoJsonSource(GEOJSON_SOURCE, featureCollection));
         mapboxMap.addSource(new GeoJsonSource(MARKER_SOURCE, featureCollectionMarker));
+        mapboxMap.addSource(new GeoJsonSource(POLYGON_SOURCE, featureCollectionPolygon));
     }
 
     // REACT NATIVE ----------------- BRIDGE -----------------
+    @ReactMethod
+    public void drawPolygon(@Nullable ReadableArray coordinates, Boolean isHotspot) {
+
+        for (int i = 0; i<coordinates.size(); i++) {
+            OUTER_POINTS.add(Point.fromLngLat(coordinates.getArray(i).getDouble(0), coordinates.getArray(i).getDouble(1)));
+        }
+        POINTS.add(OUTER_POINTS);
+
+        if (isHotspot) {
+
+        } else {
+            mContext.getCurrentActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    GeoJsonSource source = mapboxMap.getSourceAs(POLYGON_SOURCE);
+
+                    source.setGeoJson(Polygon.fromLngLats(POINTS));
+                    mapboxMap.addLayerBelow(new FillLayer(POLYGON_LAYER, POLYGON_SOURCE).withProperties(
+                            fillOpacity(0.2f),
+                            fillColor(Color.parseColor("#017aff"))
+                    ), "road-label-small");
+                }
+            });
+        }
+    }
+
     @ReactMethod
     public void addPoint(@Nullable final ReadableArray coordinates) {
         mContext.getCurrentActivity().runOnUiThread(new Runnable() {
