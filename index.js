@@ -5,11 +5,15 @@ const MapboxNative = requireNativeComponent('MapboxNative', null);
 export const AddPoint = (coord, isCamera = true) => {
     if (Platform.OS == 'ios') {
         NativeModules.MapboxNative.addPoint(coord, isCamera, () => {});
+    } else {
+        NativeModules.MapboxNative.addPoint(coord);
     }
 }
 
 export const SetCoordinates = (coords) => {
     if (Platform.OS == 'ios') {
+        NativeModules.MapboxNative.setCoordinates(coords);
+    } else {
         NativeModules.MapboxNative.setCoordinates(coords);
     }
 }
@@ -28,6 +32,8 @@ export const StopNavigation = () => {
 
 export const ClearMap = () => {
     if (Platform.OS == 'ios') {
+        NativeModules.MapboxNative.clearMapItems();
+    } else {
         NativeModules.MapboxNative.clearMapItems();
     }
 }
