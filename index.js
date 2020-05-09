@@ -11,11 +11,7 @@ export const AddPoint = (coord, isCamera = true) => {
 }
 
 export const SetCoordinates = (coords) => {
-    if (Platform.OS == 'ios') {
-        NativeModules.MapboxNative.setCoordinates(coords);
-    } else {
-        NativeModules.MapboxNative.setCoordinates(coords);
-    }
+    NativeModules.MapboxNative.setCoordinates(coords);
 }
 
 export const StartNavigation = () => {
@@ -31,11 +27,7 @@ export const StopNavigation = () => {
 }
 
 export const ClearMap = () => {
-    if (Platform.OS == 'ios') {
-        NativeModules.MapboxNative.clearMapItems();
-    } else {
-        NativeModules.MapboxNative.clearMapItems();
-    }
+    NativeModules.MapboxNative.clearMapItems();
 }
 
 export const DrawPolygon = (coords, isHotspot = false) => {
