@@ -63,14 +63,18 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
     public static final String REACT_CLASS = "MapboxNative";
     private static final String TAG = "MainActivity";
 
+    public Boolean isHotspotActive = false;
+
     private static final String GEOJSON_SOURCE = "geojson-source-lineLayer";
     private static final String DIRECTIONS_LAYER = "directions-layer";
     private static final String POLYGON_LAYER = "polygon-layer";
+    private static final String HOTSPOT_POLYGON_LAYER = "hotspot-polygon-layer";
 
     private static final String MARKER_SOURCE = "marker-source";
     private static final String MARKER_STYLE_LAYER = "marker-style-layer";
     private static final String MARKER_IMAGE = "custom-marker";
     private static final String POLYGON_SOURCE = "polygon-source";
+    private static final String HOTSPOT_POLYGON_SOURCE = "hotspot-polygon-source";
 
 
     private static ThemedReactContext mContext;
@@ -82,9 +86,12 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
     private FeatureCollection featureCollection;
     private FeatureCollection featureCollectionMarker;
     private FeatureCollection featureCollectionPolygon;
+    private FeatureCollection featureCollectionHotspotPolygon;
 
     private static final List<List<Point>> POINTS = new ArrayList<>();
     private static final List<Point> OUTER_POINTS = new ArrayList<>();
+    private static final List<List<Point>> HOTSPOT_POINTS = new ArrayList<>();
+    private static final List<Point> HOTSPOT_OUTER_POINTS = new ArrayList<>();
 
     @Override
     public String getName() {
@@ -181,24 +188,43 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
         featureCollection = FeatureCollection.fromFeatures(new Feature[] {});
         featureCollectionMarker = FeatureCollection.fromFeatures(new Feature[] {});
         featureCollectionPolygon = FeatureCollection.fromFeatures(new Feature[] {});
+        featureCollectionHotspotPolygon = FeatureCollection.fromFeatures(new Feature[] {});
 
         mapboxMap.addSource(new GeoJsonSource(GEOJSON_SOURCE, featureCollection));
         mapboxMap.addSource(new GeoJsonSource(MARKER_SOURCE, featureCollectionMarker));
         mapboxMap.addSource(new GeoJsonSource(POLYGON_SOURCE, featureCollectionPolygon));
+        mapboxMap.addSource(new GeoJsonSource(HOTSPOT_POLYGON_SOURCE, featureCollectionHotspotPolygon));
     }
 
     // REACT NATIVE ----------------- BRIDGE -----------------
     @ReactMethod
-    public void drawPolygon(@Nullable ReadableArray coordinates, Boolean isHotspot) {
-
-        for (int i = 0; i<coordinates.size(); i++) {
-            OUTER_POINTS.add(Point.fromLngLat(coordinates.getArray(i).getDouble(0), coordinates.getArray(i).getDouble(1)));
-        }
-        POINTS.add(OUTER_POINTS);
-
+    public void drawPolygon(@Nullable ReadableArray coordinates, final Boolean isHotspot) {
         if (isHotspot) {
+            isHotspotActive = true;
 
+            for (int i = 0; i<coordinates.size(); i++) {
+                HOTSPOT_OUTER_POINTS.add(Point.fromLngLat(coordinates.getArray(i).getDouble(0), coordinates.getArray(i).getDouble(1)));
+            }
+            HOTSPOT_POINTS.add(HOTSPOT_OUTER_POINTS);
+
+            mContext.getCurrentActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    GeoJsonSource source = mapboxMap.getSourceAs(HOTSPOT_POLYGON_SOURCE);
+
+                    source.setGeoJson(Polygon.fromLngLats(HOTSPOT_POINTS));
+                    mapboxMap.addLayerBelow(new FillLayer(HOTSPOT_POLYGON_LAYER, HOTSPOT_POLYGON_SOURCE).withProperties(
+                            fillOpacity(0.2f),
+                            fillColor(Color.parseColor("#017aff"))
+                    ), "road-label-small");
+                }
+            });
         } else {
+            for (int i = 0; i<coordinates.size(); i++) {
+                OUTER_POINTS.add(Point.fromLngLat(coordinates.getArray(i).getDouble(0), coordinates.getArray(i).getDouble(1)));
+            }
+            POINTS.add(OUTER_POINTS);
+
             mContext.getCurrentActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -206,7 +232,7 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
 
                     source.setGeoJson(Polygon.fromLngLats(POINTS));
                     mapboxMap.addLayerBelow(new FillLayer(POLYGON_LAYER, POLYGON_SOURCE).withProperties(
-                            fillOpacity(0.2f),
+                            fillOpacity(0.1f),
                             fillColor(Color.parseColor("#017aff"))
                     ), "road-label-small");
                 }
