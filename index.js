@@ -35,9 +35,7 @@ export const DrawPolygon = (coords, isHotspot = false) => {
 }
 
 export const PolygonCenterPoint = (coord) => {
-    if (Platform.OS == 'ios') {
-        NativeModules.MapboxNative.polygonCenterPoint(coord);
-    }
+    NativeModules.MapboxNative.polygonCenterPoint(coord);
 }
 
 export const RegionChangedEvent = () => {
