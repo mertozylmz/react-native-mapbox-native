@@ -73,6 +73,7 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
     private static final String MARKER_SOURCE = "marker-source";
     private static final String MARKER_STYLE_LAYER = "marker-style-layer";
     private static final String MARKER_IMAGE = "custom-marker";
+    private static final String HOTSPOT_IMAGE = "custom-hotspot-marker";
     private static final String POLYGON_SOURCE = "polygon-source";
     private static final String HOTSPOT_POLYGON_SOURCE = "hotspot-polygon-source";
 
@@ -115,8 +116,10 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
         initializeLocationEngine();
         initializeLocationLayer();
 
+        Bitmap hotspotIcon = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.hotspot);
         Bitmap icon = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.ic_marker);
         mapboxMap.addImage(MARKER_IMAGE, icon);
+        mapboxMap.addImage(HOTSPOT_IMAGE, hotspotIcon);
         createRouteLayer();
     }
 
