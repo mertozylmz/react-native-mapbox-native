@@ -71,7 +71,9 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
     private static final String HOTSPOT_POLYGON_LAYER = "hotspot-polygon-layer";
 
     private static final String MARKER_SOURCE = "marker-source";
+    private static final String HOTSPOT_MARKER_SOURCE = "hotspot-marker-source";
     private static final String MARKER_STYLE_LAYER = "marker-style-layer";
+    private static final String HOTSPOT_MARKER_STYLE_LAYER = "hotspot-marker-style-layer";
     private static final String MARKER_IMAGE = "custom-marker";
     private static final String HOTSPOT_IMAGE = "custom-hotspot-marker";
     private static final String POLYGON_SOURCE = "polygon-source";
@@ -86,6 +88,7 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
     private Location originLocation;
     private FeatureCollection featureCollection;
     private FeatureCollection featureCollectionMarker;
+    private FeatureCollection featureCollectionHotspotMarker;
     private FeatureCollection featureCollectionPolygon;
     private FeatureCollection featureCollectionHotspotPolygon;
 
@@ -190,11 +193,13 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
     private void createRouteLayer() {
         featureCollection = FeatureCollection.fromFeatures(new Feature[] {});
         featureCollectionMarker = FeatureCollection.fromFeatures(new Feature[] {});
+        featureCollectionHotspotMarker = FeatureCollection.fromFeatures(new Feature[] {});
         featureCollectionPolygon = FeatureCollection.fromFeatures(new Feature[] {});
         featureCollectionHotspotPolygon = FeatureCollection.fromFeatures(new Feature[] {});
 
         mapboxMap.addSource(new GeoJsonSource(GEOJSON_SOURCE, featureCollection));
         mapboxMap.addSource(new GeoJsonSource(MARKER_SOURCE, featureCollectionMarker));
+        mapboxMap.addSource(new GeoJsonSource(HOTSPOT_MARKER_SOURCE, featureCollectionHotspotMarker));
         mapboxMap.addSource(new GeoJsonSource(POLYGON_SOURCE, featureCollectionPolygon));
         mapboxMap.addSource(new GeoJsonSource(HOTSPOT_POLYGON_SOURCE, featureCollectionHotspotPolygon));
     }
@@ -241,6 +246,30 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
                 }
             });
         }
+    }
+
+    @ReactMethod
+    public void polygonCenterPoint(@Nullable final ReadableArray coordinates) {
+        mContext.getCurrentActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                List<Feature> features = new ArrayList<>();
+                features.add(Feature.fromGeometry(Point.fromLngLat(coordinates.getDouble(0), coordinates.getDouble(1))));
+                featureCollectionHotspotMarker = FeatureCollection.fromFeatures(features);
+                GeoJsonSource source = mapboxMap.getSourceAs(HOTSPOT_MARKER_SOURCE);
+
+                source.setGeoJson(featureCollectionHotspotMarker);
+
+                Float[] floats = {0f, -20f};
+                SymbolLayer markerStyleLayer = new SymbolLayer(HOTSPOT_MARKER_STYLE_LAYER, HOTSPOT_MARKER_SOURCE)
+                        .withProperties(
+                                PropertyFactory.iconOffset(floats),
+                                PropertyFactory.iconAllowOverlap(true),
+                                PropertyFactory.iconImage(HOTSPOT_IMAGE)
+                        );
+                mapboxMap.addLayer(markerStyleLayer);
+            }
+        });
     }
 
     @ReactMethod
