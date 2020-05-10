@@ -4,11 +4,15 @@ import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.PointF;
+import android.graphics.RectF;
 import android.location.Location;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.uimanager.SimpleViewManager;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.mapbox.android.core.location.LocationEngine;
@@ -59,7 +63,7 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineColor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineJoin;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineWidth;
 
-public class MapboxNativeManager extends SimpleViewManager implements OnMapReadyCallback, LocationEngineListener, OnLocationClickListener {
+public class MapboxNativeManager extends SimpleViewManager implements MapboxMap.OnMapClickListener, OnMapReadyCallback, LocationEngineListener, OnLocationClickListener {
     public static final String REACT_CLASS = "MapboxNative";
     private static final String TAG = "MainActivity";
 
@@ -124,6 +128,19 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
         mapboxMap.addImage(MARKER_IMAGE, icon);
         mapboxMap.addImage(HOTSPOT_IMAGE, hotspotIcon);
         createRouteLayer();
+
+        mapboxMap.addOnMapClickListener(MapboxNativeManager.this);
+    }
+
+    @Override
+    public void onMapClick(@NonNull LatLng point) {
+        PointF pointf = mapboxMap.getProjection().toScreenLocation(point);
+        RectF rectF = new RectF(pointf.x - 10, pointf.y - 10, pointf.x + 10, pointf.y + 10);
+        List<Feature> featureList = mapboxMap.queryRenderedFeatures(rectF, HOTSPOT_POLYGON_LAYER);
+
+        if (featureList.size() > 0) {
+            hotspotEvent(point);
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -202,6 +219,15 @@ public class MapboxNativeManager extends SimpleViewManager implements OnMapReady
         mapboxMap.addSource(new GeoJsonSource(HOTSPOT_MARKER_SOURCE, featureCollectionHotspotMarker));
         mapboxMap.addSource(new GeoJsonSource(POLYGON_SOURCE, featureCollectionPolygon));
         mapboxMap.addSource(new GeoJsonSource(HOTSPOT_POLYGON_SOURCE, featureCollectionHotspotPolygon));
+    }
+
+    private void hotspotEvent(@Nullable LatLng params) {
+        Double lat = params.getLatitude();
+        Double lng = params.getLongitude();
+
+        String s = String.valueOf(lng + ", " + lat);
+
+        mContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("clickedHotspotZone", s);
     }
 
     // REACT NATIVE ----------------- BRIDGE -----------------
